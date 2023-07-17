@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/nsf/termbox-go"
 	"path/filepath"
 	"strings"
 	"time"
 
 	termboxUtil "github.com/br0xen/termbox-util"
-	"github.com/nsf/termbox-go"
 )
 
 /*
@@ -632,8 +632,12 @@ func (screen *BrowserScreen) buildRightPane(style Style) {
 
 			value := strings.Split(string(formatValue([]byte(p.val))), "\n")
 			if len(value) == 1 {
+				val, ok := p.GetVal()
+				if ok {
+					val = "(" + val + ")"
+				}
 				screen.rightPaneBuffer = append(screen.rightPaneBuffer,
-					Line{fmt.Sprintf("Value: %s", value[0]), style.defaultFg, style.defaultBg})
+					Line{fmt.Sprintf("Value: %s%s", value[0], val), style.defaultFg, style.defaultBg})
 			} else {
 				screen.rightPaneBuffer = append(screen.rightPaneBuffer,
 					Line{"Value:", style.defaultFg, style.defaultBg})
@@ -727,7 +731,8 @@ func (screen *BrowserScreen) bucketToLines(bkt *BoltBucket, style Style) []Line 
 			if AppArgs.NoValue {
 				pairString = fmt.Sprintf("%s%s", prPrefix, stringify([]byte(bp.key)))
 			} else {
-				pairString = fmt.Sprintf("%s%s: %s", prPrefix, stringify([]byte(bp.key)), stringify([]byte(bp.val)))
+				val, _ := bp.GetVal()
+				pairString = fmt.Sprintf("%s%s: %s", prPrefix, stringify([]byte(bp.key)), val)
 			}
 			ret = append(ret, Line{pairString, pfg, pbg})
 		}

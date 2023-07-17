@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"go.etcd.io/bbolt"
@@ -376,6 +378,27 @@ GetPath Returns the path of the BoltPair
 */
 func (p *BoltPair) GetPath() []string {
 	return append(p.parent.GetPath(), p.key)
+}
+
+var valueFormat = strings.ToLower(os.Getenv("VALUE_FORMAT"))
+
+func (p *BoltPair) GetVal() (string, bool) {
+	switch {
+	case valueFormat == "int64" && len(p.val) == 8:
+		seq := binary.LittleEndian.Uint64([]byte(p.val))
+		return strconv.FormatInt(int64(seq), 10), true
+	case valueFormat == "uint64" && len(p.val) == 8:
+		seq := binary.LittleEndian.Uint64([]byte(p.val))
+		return strconv.FormatUint(seq, 10), true
+	case valueFormat == "uint32" && len(p.val) == 4:
+		seq := binary.LittleEndian.Uint32([]byte(p.val))
+		return strconv.FormatUint(uint64(seq), 10), true
+	case valueFormat == "int32" && len(p.val) == 4:
+		seq := binary.LittleEndian.Uint32([]byte(p.val))
+		return strconv.FormatInt(int64(seq), 10), true
+	default:
+		return stringify([]byte(p.val)), false
+	}
 }
 
 /* This is a go-between function (between the boltbrowser structs
