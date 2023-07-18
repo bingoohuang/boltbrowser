@@ -382,22 +382,30 @@ func (p *BoltPair) GetPath() []string {
 
 var valueFormat = strings.ToLower(os.Getenv("VALUE_FORMAT"))
 
+func (p *BoltPair) GetKey() (string, bool) {
+	return p.Val([]byte(p.key))
+}
+
 func (p *BoltPair) GetVal() (string, bool) {
+	return p.Val([]byte(p.val))
+}
+
+func (p *BoltPair) Val(val []byte) (string, bool) {
 	switch {
-	case valueFormat == "int64" && len(p.val) == 8:
-		seq := binary.LittleEndian.Uint64([]byte(p.val))
+	case valueFormat == "int64" && len(val) == 8:
+		seq := binary.LittleEndian.Uint64(val)
 		return strconv.FormatInt(int64(seq), 10), true
-	case valueFormat == "uint64" && len(p.val) == 8:
-		seq := binary.LittleEndian.Uint64([]byte(p.val))
+	case valueFormat == "uint64" && len(val) == 8:
+		seq := binary.LittleEndian.Uint64(val)
 		return strconv.FormatUint(seq, 10), true
-	case valueFormat == "uint32" && len(p.val) == 4:
-		seq := binary.LittleEndian.Uint32([]byte(p.val))
+	case valueFormat == "uint32" && len(val) == 4:
+		seq := binary.LittleEndian.Uint32(val)
 		return strconv.FormatUint(uint64(seq), 10), true
-	case valueFormat == "int32" && len(p.val) == 4:
-		seq := binary.LittleEndian.Uint32([]byte(p.val))
+	case valueFormat == "int32" && len(val) == 4:
+		seq := binary.LittleEndian.Uint32(val)
 		return strconv.FormatInt(int64(seq), 10), true
 	default:
-		return stringify([]byte(p.val)), false
+		return stringify(val), false
 	}
 }
 

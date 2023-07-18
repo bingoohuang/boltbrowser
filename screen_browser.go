@@ -608,7 +608,7 @@ func (screen *BrowserScreen) drawLeftPane(style Style) {
 	}
 	if len(screen.leftPaneBuffer) > 0 {
 		for k, v := range screen.leftPaneBuffer[treeOffset:] {
-			termboxUtil.DrawStringAtPoint(v.Text, startX, (startY + k - 1), v.Fg, v.Bg)
+			termboxUtil.DrawStringAtPoint(v.Text, startX, startY+k-1, v.Fg, v.Bg)
 		}
 	}
 }
@@ -627,8 +627,14 @@ func (screen *BrowserScreen) buildRightPane(style Style) {
 		} else if p != nil {
 			screen.rightPaneBuffer = append(screen.rightPaneBuffer,
 				Line{fmt.Sprintf("Path: %s", strings.Join(stringifyPath(p.GetPath()), " → ")), style.defaultFg, style.defaultBg})
+
+			k := stringify([]byte(p.key))
+			if key, ok := p.GetKey(); ok {
+				k += fmt.Sprintf("(%s)", key)
+			}
+
 			screen.rightPaneBuffer = append(screen.rightPaneBuffer,
-				Line{fmt.Sprintf("Key: %s", stringify([]byte(p.key))), style.defaultFg, style.defaultBg})
+				Line{fmt.Sprintf("Key: %s", k), style.defaultFg, style.defaultBg})
 
 			value := strings.Split(string(formatValue([]byte(p.val))), "\n")
 			if len(value) == 1 {
@@ -663,7 +669,7 @@ func (screen *BrowserScreen) drawRightPane(style Style) {
 		screen.rightViewPort.numberOfRows = h - 2
 		// Screen is wide enough, split it
 		termboxUtil.FillWithChar('=', 0, 1, w, 1, style.defaultFg, style.defaultBg)
-		termboxUtil.FillWithChar('|', (w / 2), screen.rightViewPort.firstRow-1, (w / 2), h, style.defaultFg, style.defaultBg)
+		termboxUtil.FillWithChar('|', w/2, screen.rightViewPort.firstRow-1, w/2, h, style.defaultFg, style.defaultBg)
 		// Clear the right pane
 		termboxUtil.FillWithChar(' ', (w/2)+1, screen.rightViewPort.firstRow+2, w, h, style.defaultFg, style.defaultBg)
 
@@ -678,7 +684,7 @@ func (screen *BrowserScreen) drawRightPane(style Style) {
 		}
 		if len(screen.rightPaneBuffer) > 0 {
 			for k, v := range screen.rightPaneBuffer[screen.rightViewPort.scrollRow:] {
-				termboxUtil.DrawStringAtPoint(v.Text, startX, (startY + k - 1), v.Fg, v.Bg)
+				termboxUtil.DrawStringAtPoint(v.Text, startX, startY+k-1, v.Fg, v.Bg)
 			}
 		}
 	}
@@ -746,8 +752,8 @@ func (screen *BrowserScreen) startDeleteItem() bool {
 	b, p, e := screen.db.getGenericFromPath(screen.currentPath)
 	if e == nil {
 		w, h := termbox.Size()
-		inpW, inpH := (w / 2), 6
-		inpX, inpY := ((w / 2) - (inpW / 2)), ((h / 2) - inpH)
+		inpW, inpH := w/2, 6
+		inpX, inpY := (w/2)-(inpW/2), (h/2)-inpH
 		mod := termboxUtil.CreateConfirmModal("", inpX, inpY, inpW, inpH, termbox.ColorWhite, termbox.ColorBlack)
 		if b != nil {
 			mod.SetTitle(termboxUtil.AlignText(fmt.Sprintf("Delete Bucket '%s'?", b.name), inpW-1, termboxUtil.AlignCenter))
@@ -767,8 +773,8 @@ func (screen *BrowserScreen) startFilter() bool {
 	_, _, e := screen.db.getGenericFromPath(screen.currentPath)
 	if e == nil {
 		w, h := termbox.Size()
-		inpW, inpH := (w / 2), 6
-		inpX, inpY := ((w / 2) - (inpW / 2)), ((h / 2) - inpH)
+		inpW, inpH := w/2, 6
+		inpX, inpY := (w/2)-(inpW/2), (h/2)-inpH
 		mod := termboxUtil.CreateInputModal("", inpX, inpY, inpW, inpH, termbox.ColorWhite, termbox.ColorBlack)
 		mod.SetTitle(termboxUtil.AlignText("Filter", inpW, termboxUtil.AlignCenter))
 		mod.SetValue(screen.filter)
@@ -784,8 +790,8 @@ func (screen *BrowserScreen) startEditItem() bool {
 	_, p, e := screen.db.getGenericFromPath(screen.currentPath)
 	if e == nil {
 		w, h := termbox.Size()
-		inpW, inpH := (w / 2), 6
-		inpX, inpY := ((w / 2) - (inpW / 2)), ((h / 2) - inpH)
+		inpW, inpH := w/2, 6
+		inpX, inpY := (w/2)-(inpW/2), (h/2)-inpH
 		mod := termboxUtil.CreateInputModal("", inpX, inpY, inpW, inpH, termbox.ColorWhite, termbox.ColorBlack)
 		if p != nil {
 			mod.SetTitle(termboxUtil.AlignText(fmt.Sprintf("Input new value for '%s'", p.key), inpW, termboxUtil.AlignCenter))
@@ -803,8 +809,8 @@ func (screen *BrowserScreen) startRenameItem() bool {
 	b, p, e := screen.db.getGenericFromPath(screen.currentPath)
 	if e == nil {
 		w, h := termbox.Size()
-		inpW, inpH := (w / 2), 6
-		inpX, inpY := ((w / 2) - (inpW / 2)), ((h / 2) - inpH)
+		inpW, inpH := w/2, 6
+		inpX, inpY := (w/2)-(inpW/2), (h/2)-inpH
 		mod := termboxUtil.CreateInputModal("", inpX, inpY, inpW, inpH, termbox.ColorWhite, termbox.ColorBlack)
 		if b != nil {
 			mod.SetTitle(termboxUtil.AlignText(fmt.Sprintf("Rename Bucket '%s' to:", b.name), inpW, termboxUtil.AlignCenter))
@@ -825,9 +831,9 @@ func (screen *BrowserScreen) startInsertItemAtParent(tp BoltType) bool {
 	w, h := termbox.Size()
 	inpW, inpH := w-1, 7
 	if w > 80 {
-		inpW, inpH = (w / 2), 7
+		inpW, inpH = w/2, 7
 	}
-	inpX, inpY := ((w / 2) - (inpW / 2)), ((h / 2) - inpH)
+	inpX, inpY := (w/2)-(inpW/2), (h/2)-inpH
 	mod := termboxUtil.CreateInputModal("", inpX, inpY, inpW, inpH, termbox.ColorWhite, termbox.ColorBlack)
 	screen.inputModal = mod
 	if len(screen.currentPath) <= 0 {
@@ -876,9 +882,9 @@ func (screen *BrowserScreen) startInsertItem(tp BoltType) bool {
 	w, h := termbox.Size()
 	inpW, inpH := w-1, 7
 	if w > 80 {
-		inpW, inpH = (w / 2), 7
+		inpW, inpH = w/2, 7
 	}
-	inpX, inpY := ((w / 2) - (inpW / 2)), ((h / 2) - inpH)
+	inpX, inpY := (w/2)-(inpW/2), (h/2)-inpH
 	mod := termboxUtil.CreateInputModal("", inpX, inpY, inpW, inpH, termbox.ColorWhite, termbox.ColorBlack)
 	//mod.SetInputWrap(true)
 	screen.inputModal = mod
@@ -918,8 +924,8 @@ func (screen *BrowserScreen) startExportValue() bool {
 	_, p, e := screen.db.getGenericFromPath(screen.currentPath)
 	if e == nil && p != nil {
 		w, h := termbox.Size()
-		inpW, inpH := (w / 2), 6
-		inpX, inpY := ((w / 2) - (inpW / 2)), ((h / 2) - inpH)
+		inpW, inpH := w/2, 6
+		inpX, inpY := (w/2)-(inpW/2), (h/2)-inpH
 		mod := termboxUtil.CreateInputModal("", inpX, inpY, inpW, inpH, termbox.ColorWhite, termbox.ColorBlack)
 		mod.SetTitle(termboxUtil.AlignText(fmt.Sprintf("Export value of '%s' to:", p.key), inpW, termboxUtil.AlignCenter))
 		mod.SetValue("")
@@ -936,8 +942,8 @@ func (screen *BrowserScreen) startExportJSON() bool {
 	b, p, e := screen.db.getGenericFromPath(screen.currentPath)
 	if e == nil {
 		w, h := termbox.Size()
-		inpW, inpH := (w / 2), 6
-		inpX, inpY := ((w / 2) - (inpW / 2)), ((h / 2) - inpH)
+		inpW, inpH := w/2, 6
+		inpX, inpY := (w/2)-(inpW/2), (h/2)-inpH
 		mod := termboxUtil.CreateInputModal("", inpX, inpY, inpW, inpH, termbox.ColorWhite, termbox.ColorBlack)
 		if b != nil {
 			mod.SetTitle(termboxUtil.AlignText(fmt.Sprintf("Export JSON of '%s' to:", b.name), inpW, termboxUtil.AlignCenter))
@@ -958,8 +964,8 @@ func (screen *BrowserScreen) startImportValue() bool {
 	_, p, e := screen.db.getGenericFromPath(screen.currentPath)
 	if e == nil && p != nil {
 		w, h := termbox.Size()
-		inpW, inpH := (w / 2), 6
-		inpX, inpY := ((w / 2) - (inpW / 2)), ((h / 2) - inpH)
+		inpW, inpH := w/2, 6
+		inpX, inpY := (w/2)-(inpW/2), (h/2)-inpH
 		mod := termboxUtil.CreateInputModal("", inpX, inpY, inpW, inpH, termbox.ColorWhite, termbox.ColorBlack)
 		mod.SetTitle(termboxUtil.AlignText(fmt.Sprintf("Import value of '%s' from:", p.key), inpW, termboxUtil.AlignCenter))
 		mod.SetValue("")
